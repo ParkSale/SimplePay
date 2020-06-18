@@ -95,7 +95,13 @@
                     userPassword : userPassword,
                 },
 				success:function(data){
-					alert(data);
+					if(data == '이메일을 확인해주세요.' || data == '비밀번호를 확인해주세요.'){
+						alert(data);
+					}
+					else{
+						sessionStorage.setItem('ourToken',data);
+						window.location = '/main';
+					}
 				}
        		})
         })

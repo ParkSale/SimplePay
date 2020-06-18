@@ -3,7 +3,7 @@ const request = require('request');
 const app = express();
 const path = require('path');
 const jwt = require('jsonwebtoken');
-
+const auth = require('./lib/auth');
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
@@ -74,31 +74,65 @@ app.post('/login', function(req, res){
 
     var sql = "SELECT * FROM user WHERE email = ?";
     connection.query(sql,[userEmail],function(err,result){
-        if(error) throw error;
+        if(err) throw err;
         if(result.length == 0){
             res.json('이메일을 확인해주세요.');
         }
         else{
             var dbPassword = result[0].password;
             if(dbPassword == userPassword){
-                res.json('로그인 성공!');
                 jwt.sign({
-                    foo : 'bar'
-                },
+                    userId : result[0].id,
+                    userName : result[0].name
+                },//payload부분
                 'fintechservice!1234#',
                 {
-                    expiresIn : '10d',
+                    expiresIn : '1d',
                     issuer : 'fintech.admin',
                     subject : 'user.login.info'
                 },
                 function(err,token){
-                    console.log(token);
+                    res.json(token);
                 });
             }
             else{
                 res.json('비밀번호를 확인해주세요.');
             }
         }
+    })
+})
+
+app.get('/authTest',auth, function(req,res){
+    res.json(req.decoded);
+})
+
+app.get('/main',function(req,res){
+    res.render('main');
+})
+
+app.post('/list',auth,function(req,res){
+    var userId = req.decoded.userId;
+    var accessToken;
+    var userSeqNo;
+    var sql = "SELECT * FROM user where id = ?";
+    connection.query(sql,[userId],function(err,result){
+        if(err) throw err;
+        accessToken = result[0].accesstoken;
+        userSeqNo = result[0].userseqno;
+        var option = {
+            method : 'GET',
+            url : "https://testapi.openbanking.or.kr/v2.0/user/me",
+            headers : {
+                'Authorization' : "Bearer " + accessToken
+            },
+            qs : {
+                user_seq_no : userSeqNo
+            }
+        }
+        request(option, function (error, response, body){
+            var requestResultJSON = JSON.parse(body);
+            res.json(requestResultJSON);
+        })
     })
 })
 app.listen(8080)
