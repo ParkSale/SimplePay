@@ -1,9 +1,10 @@
-const express = require('express')
-const request = require('request')
-const app = express()
-const path = require('path')
+const express = require('express');
+const request = require('request');
+const app = express();
+const path = require('path');
+const jwt = require('jsonwebtoken');
 
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 app.use(express.json());
@@ -68,6 +69,36 @@ app.get('/login',function(req,res){
 })
 
 app.post('/login', function(req, res){
-    console.log(req.body);
+    var userEmail = req.body.userEmail;
+    var userPassword = req.body.userPassword;
+
+    var sql = "SELECT * FROM user WHERE email = ?";
+    connection.query(sql,[userEmail],function(err,result){
+        if(error) throw error;
+        if(result.length == 0){
+            res.json('이메일을 확인해주세요.');
+        }
+        else{
+            var dbPassword = result[0].password;
+            if(dbPassword == userPassword){
+                res.json('로그인 성공!');
+                jwt.sign({
+                    foo : 'bar'
+                },
+                'fintechservice!1234#',
+                {
+                    expiresIn : '10d',
+                    issuer : 'fintech.admin',
+                    subject : 'user.login.info'
+                },
+                function(err,token){
+                    console.log(token);
+                });
+            }
+            else{
+                res.json('비밀번호를 확인해주세요.');
+            }
+        }
+    })
 })
 app.listen(8080)
