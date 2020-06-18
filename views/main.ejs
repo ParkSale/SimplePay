@@ -288,7 +288,6 @@
                     'ourtoken' : jwtToken
                 },
                 success:function(data){
-                    console.log(data.res_list);
                     for(var i=0; i < data.res_list.length; i++){
                         $("#cardList").append(
                             '<div class="balance-card mb-15">'+ i +

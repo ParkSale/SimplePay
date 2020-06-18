@@ -135,4 +135,69 @@ app.post('/list',auth,function(req,res){
         })
     })
 })
+
+app.get('/balance',function(req,res){
+    res.render('balance');
+})
+
+app.post('/balance',auth, function(req,res){
+    var finUseNum = req.body.fin_use_num;
+    var userId = req.decoded.userId;
+    var sql = "SELECT * from user where id = ?";
+    var countNum = Math.floor(Math.random() * 1000000000) + 1;
+    var transId = "T991637050U" + countNum;
+    connection.query(sql,[userId],function(err,result){
+        if(err) throw err;
+        var accessToken = result[0].accesstoken;
+        var option = {
+            method : 'GET',
+            url : "https://testapi.openbanking.or.kr/v2.0/account/balance/fin_num",
+            headers : {
+                'Authorization' : "Bearer " + accessToken
+            },
+            qs : {
+                bank_tran_id : transId,
+                fintech_use_num : finUseNum,
+                tran_dtime : 20200618160000
+            }
+        }
+        request(option,function(error,response,body){
+            var requestResultJSON = JSON.parse(body);
+            res.json(requestResultJSON);
+        })
+    })
+})
+
+app.post('/transactionlist',auth,function(req,res){
+    var finUseNum = req.body.fin_use_num;
+    var userId = req.decoded.userId;
+    var sql = "SELECT * from user where id = ?";
+    var countNum = Math.floor(Math.random() * 1000000000) + 1;
+    var transId = "T991637050U" + countNum;
+    connection.query(sql,[userId],function(err,result){
+        if(err) throw err;
+        var accessToken = result[0].accesstoken;
+        var option = {
+            method : 'GET',
+            url : "https://testapi.openbanking.or.kr/v2.0/account/transaction_list/fin_num",
+            headers : {
+                'Authorization' : "Bearer " + accessToken
+            },
+            qs : {
+                bank_tran_id : transId,
+                fintech_use_num : finUseNum,
+                inquiry_type : "A",
+                inquiry_base : "D",
+                from_date : 20190101,
+                to_date : 20200618,
+                sort_order : "D",
+                tran_dtime : 20200618160000
+            }
+        }
+        request(option,function(error,response,body){
+            var requestResultJSON = JSON.parse(body);
+            res.json(requestResultJSON);
+        })
+    })
+})
 app.listen(8080)
