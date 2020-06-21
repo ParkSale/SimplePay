@@ -200,4 +200,52 @@ app.post('/transactionlist',auth,function(req,res){
         })
     })
 })
+
+app.get('/qrcode',function(req,res){
+    res.render('qrcode');
+})
+
+app.get('/qr',function(req,res){
+    res.render('qrReader');
+})
+
+app.post('/withdraw',auth,function(req,res){
+    var finUseNum = req.body.fin_use_num;
+    var userId = req.decoded.userId;
+    var sql = "SELECT * from user where id = ?";
+    var countNum = Math.floor(Math.random() * 1000000000) + 1;
+    var transId = "T991637050U" + countNum;
+    connection.query(sql,[userId],function(err,result){
+        if(err) throw err;
+        var accessToken = result[0].accesstoken;
+        var option = {
+            method : 'POST',
+            url : "https://testapi.openbanking.or.kr/v2.0/transfer/withdraw/fin_num",
+            headers : {
+                'Authorization' : "Bearer " + accessToken,
+                'Content-Type' : 'application/json'
+            },
+            json : {
+                bank_tran_id : transId,
+                cntr_account_type : "N",
+                cntr_account_num : 3806150370,
+                fintech_use_num : finUseNum,
+                tran_amt : 1000000,
+                tran_dtime : 20200618160000,
+                req_client_name : "박세일",
+                req_client_fintech_use_num : finUseNum,
+                req_client_num : "HONGGILDONG1234",
+                transfer_purpose : "TR",
+                recv_client_name : "박세일",
+                recv_client_bank_code : "097",
+                recv_client_account_num : 3806150370
+            }
+        }
+        request(option,function(error,response,body){
+            console.log(body);
+            var requestResultJSON = JSON.parse(body);
+            res.json(requestResultJSON);
+        })
+    })
+})
 app.listen(8080)
